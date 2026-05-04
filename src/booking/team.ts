@@ -16,9 +16,7 @@ export type TeamMember = {
 };
 
 export const TEAM: TeamMember[] = [
-	{ first: "Mozy", last: "Onee", email: "mozyonee@gmail.com" },
-	{ first: "Mozy", last: "Onee", email: "mozyonee@gmail.com" },
-	{ first: "Mozy", last: "Onee", email: "mozyonee@gmail.com" },
+	{ first: "Vadym", last: "Abakumov", email: "vadym.abakumov@precis.com" },
 ];
 
 export function pickTeamForSlots(slotCount: number, team: TeamMember[]): TeamMember[] {
