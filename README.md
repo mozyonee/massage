@@ -17,13 +17,12 @@ Layout is three layers: shared **core**, feature **polling**, and feature **book
 | `src/core/env.ts` | Resolve project root (walk up to `package.json`) and load `.env` / `.env.local` so compiled output under `dist/` still finds config. |
 | `src/core/types.ts` | `BookingRequestFile`, `SlotRow`, `ParsedSlot`, `slotKey`. |
 | `src/core/functions.ts` | Shared helpers (e.g. `ts()` for log timestamps). |
-| `src/core/config.ts` | Read `BOOKING_SCHEDULE_ID`, `BOOKING_COOKIE` (via headers), `POLL_MS`; display / list window use `Europe/Stockholm` in code. |
+| `src/core/config.ts` | Read `BOOKING_SCHEDULE_ID`, `POLL_MS`; display / list window use `Europe/Stockholm` in code. |
 | `src/core/http.ts` | Browser-like defaults: `buildHeaders`, `buildListSlotsBody` (42-day window from start of “today” in the display zone via `Intl`), `parseBody`, `at`, `appointmentBookingRpcUrl`, default Calendar list-slots URL. |
 | `src/polling/poll.ts` | `fetchPollPayload` + `pollOnce`: POST `ListAvailableSlots`, parse to `ParsedSlot[]`, log rows. |
 | `src/polling/slots.ts` | Unwrap nested RPC arrays, `slotsToParsed` / `slotsToRows` for logs. |
 | `src/booking/book.ts` | Booking RPCs: `GetAppointmentServiceDefinition` (context id + title), `buildBookSlotBody`, `bookSlot` (`BookSlot`). |
-| `src/booking/cli.ts` | `npm run book`: one manual `BookSlot` (env or `TEAM` + `BOOKING_AVAILABLE_SLOTS`). |
-| `src/booking/team.ts` | `TEAM`, `pickTeamForSlots`, `pickBooker`, and `bookNewSlotsForTeam` (batch `BookSlot` for `npm start`; same `BOOKING_RECAPTCHA_TOKEN` per burst—refresh if Google rejects later calls). |
+| `src/booking/team.ts` | `TEAM`, `pickTeamForSlots`, `pickBooker`, and `bookNewSlotsForTeam` (batch `BookSlot` for `npm start`; token from `recaptcha.ts` via Playwright on the schedule page). |
 
 **Flows:** `polling` does not import `booking`; `index.ts` imports `booking/team.ts` for auto-book after polls. Shared RPC URL shaping lives in `core/http.ts` (`appointmentBookingRpcUrl`).
 
@@ -32,7 +31,10 @@ Layout is three layers: shared **core**, feature **polling**, and feature **book
 ## Installation
 ```bash
 npm install
+npx playwright install chromium
 ```
+
+With a non-empty `TEAM`, auto-booking needs Chromium once: `npx playwright install chromium`. reCAPTCHA tokens are produced by opening your schedule page in a headless browser (no extra env vars).
 
 ## Development
 To compile the project and watch for changes:

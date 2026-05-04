@@ -7,6 +7,7 @@ import {
 	extractBookContextId,
 	fetchAppointmentServiceDefinition,
 } from "./book.js";
+import { resolveRecaptchaTokens } from "./recaptcha.js";
 
 export type TeamMember = {
 	first: string;
@@ -44,11 +45,6 @@ export async function bookNewSlotsForTeam(
 ): Promise<void> {
 	const n = Math.min(newSlots.length, assignees.length);
 	if (n === 0) return;
-	const recaptcha = process.env.BOOKING_RECAPTCHA_TOKEN?.trim();
-	if (!recaptcha) {
-		console.error(ts(), "BOOKING_RECAPTCHA_TOKEN missing; cannot auto-book");
-		return;
-	}
 	let def: unknown;
 	try {
 		def = await fetchAppointmentServiceDefinition(cfg);
@@ -56,19 +52,21 @@ export async function bookNewSlotsForTeam(
 		console.error(ts(), e instanceof Error ? e.message : e);
 		return;
 	}
-	const title =
-		process.env.BOOKING_APPOINTMENT_TITLE?.trim() ||
-		extractAppointmentTitle(def) ||
-		"Appointment";
-	const bookContextId =
-		process.env.BOOKING_CONTEXT_ID?.trim() || extractBookContextId(def, cfg.scheduleId);
+	const title = extractAppointmentTitle(def) || "Appointment";
+	const bookContextId = extractBookContextId(def, cfg.scheduleId);
 	if (!bookContextId) {
-		console.error(ts(), "BOOKING_CONTEXT_ID unset and not found in service definition");
+		console.error(ts(), "could not parse internal id from GetAppointmentServiceDefinition");
+		return;
+	}
+	const tokens = await resolveRecaptchaTokens(cfg, n);
+	if (!tokens) {
+		console.error(ts(), "recaptcha missing; run `npx playwright install chromium` after npm install");
 		return;
 	}
 	for (let i = 0; i < n; i++) {
 		const slot = newSlots[i]!;
 		const m = assignees[i]!;
+		const token = tokens[i]!;
 		try {
 			await bookSlot(cfg, {
 				scheduleId: cfg.scheduleId,
@@ -78,7 +76,7 @@ export async function bookNewSlotsForTeam(
 				email: m.email,
 				first: m.first,
 				last: m.last,
-				recaptchaToken: recaptcha,
+				recaptchaToken: token,
 				bookContextId,
 			});
 			console.log(ts(), `booked slot ${slot.startSec} for ${m.email}`);

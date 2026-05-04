@@ -3,6 +3,7 @@ import { loadConfig, type AppConfig } from "./core/config.js";
 import { bookNewSlotsForTeam, TEAM, pickTeamForSlots } from "./booking/team.js";
 import { pollOnce } from "./polling/poll.js";
 import { slotKey, type ParsedSlot } from "./core/types.js";
+import { schedulePageUrl } from "./core/functions.js";
 
 loadProjectEnv(import.meta.url);
 
@@ -15,7 +16,7 @@ try {
 }
 const scheduleId = cfg.scheduleId;
 const targetLabel = scheduleId
-	? `https://calendar.google.com/calendar/u/0/appointments/schedules/${scheduleId}`
+	? schedulePageUrl(scheduleId)
 	: cfg.url.slice(0, 80);
 
 let pollWarm = true;

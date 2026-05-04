@@ -22,11 +22,11 @@
 	"scripts": {
 		"build": "tsc",
 		"start": "node dist/index.js",
-		"book": "node dist/booking/cli.js",
 		"dev": "tsc --watch"
 	},
 	"dependencies": {
-		"dotenv": "^16.4.7"
+		"dotenv": "^16.4.7",
+		"playwright": "^1.49.1"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.0",
