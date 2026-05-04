@@ -1,21 +1,21 @@
 import type { AppConfig } from "../core/config.js";
 import type { ParsedSlot } from "../core/types.js";
-import { at, buildListSlotsBody, parseBody } from "../core/http.js";
+import { buildListSlotsBody, parseBody } from "../core/http.js";
 import { ts } from "../core/functions.js";
 import { leafSlotList, slotsToParsed, slotsToRows } from "./slots.js";
 
 export async function fetchPollPayload(
 	cfg: AppConfig,
 ): Promise<{ parsed: ParsedSlot[]; leaf: unknown[] } | null> {
-	const { file: c, scheduleId, url, headers } = cfg;
+	const { scheduleId, url, headers, displayTz } = cfg;
 	let body: string | undefined;
 	try {
-		body = buildListSlotsBody(c, scheduleId);
+		body = buildListSlotsBody(scheduleId, displayTz);
 	} catch (e) {
 		console.error(ts(), e instanceof Error ? e.message : String(e));
 		return null;
 	}
-	const method = c.method ?? "POST";
+	const method = "POST";
 	let res: Response;
 	try {
 		res = await fetch(url, { method, headers, ...(body !== undefined ? { body } : {}) });
@@ -39,12 +39,11 @@ export async function fetchPollPayload(
 		console.error(ts(), "response not JSON", text.slice(0, 200));
 		return null;
 	}
-	const slotsPath = process.env.BOOKING_SLOTS_ARRAY_PATH?.trim() ?? c.slotsArrayPath ?? "";
-	const raw = at(data, slotsPath);
-	if (!Array.isArray(raw)) {
-		console.error("slots path must resolve to an array");
+	if (!Array.isArray(data)) {
+		console.error("ListAvailableSlots JSON root must be an array");
 		process.exit(1);
 	}
+	const raw = data;
 	const leaf = leafSlotList(raw);
 	return { parsed: slotsToParsed(leaf), leaf };
 }

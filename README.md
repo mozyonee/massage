@@ -17,8 +17,8 @@ Layout is three layers: shared **core**, feature **polling**, and feature **book
 | `src/core/env.ts` | Resolve project root (walk up to `package.json`) and load `.env` / `.env.local` so compiled output under `dist/` still finds config. |
 | `src/core/types.ts` | `BookingRequestFile`, `SlotRow`, `ParsedSlot`, `slotKey`. |
 | `src/core/functions.ts` | Shared helpers (e.g. `ts()` for log timestamps). |
-| `src/core/config.ts` | Read `BOOKING_*` / `POLL_MS` from the environment and build `AppConfig` (schedule id, list URL, headers, timezone). |
-| `src/core/http.ts` | Browser-like defaults: `buildHeaders`, `buildListSlotsBody`, `parseBody`, `at`, `appointmentBookingRpcUrl`, default Calendar list-slots URL. |
+| `src/core/config.ts` | Read `BOOKING_SCHEDULE_ID`, `BOOKING_COOKIE` (via headers), `POLL_MS`; display / list window use `Europe/Stockholm` in code. |
+| `src/core/http.ts` | Browser-like defaults: `buildHeaders`, `buildListSlotsBody` (42-day window from start of “today” in the display zone via `Intl`), `parseBody`, `at`, `appointmentBookingRpcUrl`, default Calendar list-slots URL. |
 | `src/polling/poll.ts` | `fetchPollPayload` + `pollOnce`: POST `ListAvailableSlots`, parse to `ParsedSlot[]`, log rows. |
 | `src/polling/slots.ts` | Unwrap nested RPC arrays, `slotsToParsed` / `slotsToRows` for logs. |
 | `src/booking/book.ts` | Booking RPCs: `GetAppointmentServiceDefinition` (context id + title), `buildBookSlotBody`, `bookSlot` (`BookSlot`). |
@@ -49,7 +49,7 @@ npm run start
 
 # Configuration
 
-The application is configured via environment variables. See [.env.example](.env.example) for the full list of available variables, descriptions, and defaults.
+Environment variables are minimal; see [.env.example](.env.example).
 
 
 

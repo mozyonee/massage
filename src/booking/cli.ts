@@ -37,7 +37,7 @@ const def = await fetchAppointmentServiceDefinition(cfg);
 const title =
 	process.env.BOOKING_APPOINTMENT_TITLE?.trim() ||
 	extractAppointmentTitle(def) ||
-	req("BOOKING_APPOINTMENT_TITLE");
+	"Appointment";
 const bookContextId =
 	process.env.BOOKING_CONTEXT_ID?.trim() || extractBookContextId(def, cfg.scheduleId);
 if (!bookContextId) {

@@ -47,7 +47,7 @@ export async function fetchAppointmentServiceDefinition(cfg: AppConfig): Promise
 	const url = appointmentBookingRpcUrl(cfg.url, "GetAppointmentServiceDefinition");
 	const body = JSON.stringify([null, null, cfg.scheduleId]);
 	const res = await fetch(url, {
-		method: cfg.file.method ?? "POST",
+		method: "POST",
 		headers: cfg.headers,
 		body,
 	});
@@ -96,7 +96,7 @@ export async function bookSlot(cfg: AppConfig, p: BookSlotParams): Promise<unkno
 	const url = appointmentBookingRpcUrl(cfg.url, "BookSlot");
 	const body = JSON.stringify(buildBookSlotBody(p));
 	const res = await fetch(url, {
-		method: cfg.file.method ?? "POST",
+		method: "POST",
 		headers: cfg.headers,
 		body,
 	});
