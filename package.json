@@ -1,0 +1,34 @@
+{
+	"name": "massage",
+	"version": "1.0.0",
+	"description": "booking massages for cs engineers :3",
+	"keywords": [
+		"massage",
+		"precis",
+		"engineer"
+	],
+	"homepage": "https://github.com/mozyonee/massage#readme",
+	"bugs": {
+		"url": "https://github.com/mozyonee/massage/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mozyonee/massage.git"
+	},
+	"license": "ISC",
+	"author": "mozyonee",
+	"type": "module",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"dev": "tsc --watch"
+	},
+	"dependencies": {
+		"dotenv": "^16.4.7"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"typescript": "^5.7.2"
+	}
+}
