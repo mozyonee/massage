@@ -10,3 +10,9 @@ export type BookingRequestFile = {
 };
 
 export type SlotRow = { start: string; duration: string };
+
+export type ParsedSlot = { startSec: number; durationMin: number };
+
+export function slotKey(s: ParsedSlot): string {
+	return `${s.startSec}:${s.durationMin}`;
+}

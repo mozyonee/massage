@@ -1,18 +1,10 @@
-import { existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { config as loadEnv } from "dotenv";
-import { loadConfig, type AppConfig } from "./config.js";
-import { pollOnce } from "./poll.js";
+import { loadProjectEnv } from "./core/env.js";
+import { loadConfig, type AppConfig } from "./core/config.js";
+import { bookNewSlotsForTeam, TEAM, pickTeamForSlots } from "./booking/team.js";
+import { pollOnce } from "./polling/poll.js";
+import { slotKey, type ParsedSlot } from "./core/types.js";
 
-const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const envFiles = [resolve(projectRoot, ".env"), resolve(projectRoot, ".env.local")] as const;
-for (let i = 0; i < envFiles.length; i++) {
-	const path = envFiles[i];
-	if (existsSync(path)) {
-		loadEnv({ path, override: i > 0 });
-	}
-}
+loadProjectEnv(import.meta.url);
 
 let cfg: AppConfig;
 try {
@@ -26,8 +18,38 @@ const targetLabel = scheduleId
 	? `https://calendar.google.com/calendar/u/0/appointments/schedules/${scheduleId}`
 	: cfg.url.slice(0, 80);
 
+let pollWarm = true;
+let lastSlotKeys = new Set<string>();
+
+async function tick(): Promise<void> {
+	const parsed = await pollOnce(cfg);
+	if (parsed == null) return;
+
+	if (pollWarm) {
+		pollWarm = false;
+		lastSlotKeys = new Set(parsed.map(slotKey));
+		return;
+	}
+
+	const keys = new Set(parsed.map(slotKey));
+	const newSlots: ParsedSlot[] = [];
+	for (const s of parsed) {
+		if (!lastSlotKeys.has(slotKey(s))) newSlots.push(s);
+	}
+	lastSlotKeys = keys;
+
+	if (newSlots.length === 0 || TEAM.length === 0) return;
+
+	const n = Math.min(newSlots.length, TEAM.length);
+	const sorted = [...newSlots].sort((a, b) => a.startSec - b.startSec);
+	const slotsToBook = sorted.slice(0, n);
+	const assignees = pickTeamForSlots(n, TEAM);
+
+	await bookNewSlotsForTeam(cfg, slotsToBook, assignees);
+}
+
 console.log(`polling | ${targetLabel} | every ${cfg.pollMs}ms`);
-await pollOnce(cfg);
+await tick();
 setInterval(() => {
-	void pollOnce(cfg);
+	void tick();
 }, cfg.pollMs);

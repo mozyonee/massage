@@ -1,4 +1,4 @@
-import type { SlotRow } from "./types.js";
+import type { ParsedSlot, SlotRow } from "../core/types.js";
 
 export function leafSlotList(x: unknown): unknown[] {
 	let s: unknown = x;
@@ -38,6 +38,16 @@ function formatStartDot(sec: number, timeZone: string): string {
 	});
 	const p = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
 	return `${p.day}.${p.month}.${p.year} ${p.hour}:${p.minute}`;
+}
+
+export function slotsToParsed(leaf: unknown[]): ParsedSlot[] {
+	const out: ParsedSlot[] = [];
+	for (const entry of leaf) {
+		const v = parseSlotEntry(entry);
+		if (!v) continue;
+		out.push({ startSec: v.startSec, durationMin: v.durationMin ?? 45 });
+	}
+	return out;
 }
 
 export function slotsToRows(slots: unknown[], timeZone: string): SlotRow[] {

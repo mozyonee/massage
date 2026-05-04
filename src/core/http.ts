@@ -5,6 +5,13 @@ import type { BookingRequestFile } from "./types.js";
 export const LIST_SLOTS_DEFAULT_URL =
 	"https://calendar-pa.clients6.google.com/$rpc/google.internal.calendar.v1.AppointmentBookingService/ListAvailableSlots?%24httpHeaders=X-Goog-Api-Key%3AAIzaSyA7GKm43l8WNxlLTjsldq9z9n80CL6KW4U%0D%0AContent-Type%3Aapplication%2Fjson%2Bprotobuf%0D%0AX-User-Agent%3Agrpc-web-javascript%2F0.1%0D%0A";
 
+export function appointmentBookingRpcUrl(listSlotsUrl: string, rpcMethod: string): string {
+	return listSlotsUrl.replace(
+		/AppointmentBookingService\/[^?]+/,
+		`AppointmentBookingService/${rpcMethod}`,
+	);
+}
+
 const LIST_SLOTS_DEFAULT_HEADERS: Record<string, string> = {
 	"content-type": "application/x-www-form-urlencoded;charset=UTF-8",
 	origin: "https://calendar.google.com",
@@ -60,7 +67,7 @@ export function parseBody(text: string): unknown {
 	return JSON.parse(json) as unknown;
 }
 
-export function buildBody(c: BookingRequestFile, scheduleId: string): string | undefined {
+export function buildListSlotsBody(c: BookingRequestFile, scheduleId: string): string | undefined {
 	if (c.bodyFile) {
 		const raw = readFileSync(resolve(process.cwd(), c.bodyFile), "utf8").trim();
 		const arr = JSON.parse(raw) as unknown;

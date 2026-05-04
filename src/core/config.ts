@@ -1,4 +1,4 @@
-import { buildHeaders, LIST_SLOTS_DEFAULT_URL } from "./request.js";
+import { buildHeaders, LIST_SLOTS_DEFAULT_URL } from "./http.js";
 import type { BookingRequestFile } from "./types.js";
 
 export type AppConfig = {

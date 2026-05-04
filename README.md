@@ -8,11 +8,24 @@
 - **Dependencies:** `dotenv` for configuration, `fetch` for networking.
 
 ## Architecture
-- **Entry Point (`src/index.ts`):** Initializes environment variables, loads configuration, and starts the polling loop.
-- **Configuration (`src/config.ts`):** Manages environment variable validation and application settings.
-- **Polling Logic (`src/poll.ts`):** Orchestrates a single poll cycle: executing the request, parsing the response, and logging results.
-- **Request Builder (`src/request.ts`):** Constructs the complex headers and JSON-RPC bodies required to interact with Google's internal appointment services.
-- **Slot Parser (`src/slots.ts`):** Extracts and formats human-readable time slots from the deeply nested RPC response arrays.
+
+Layout is three layers: shared **core**, feature **polling**, and feature **booking**.
+
+| Path | Responsibility |
+|------|----------------|
+| `src/index.ts` | Poller loop: each tick runs `pollOnce`. First successful tick only records the slot snapshot (no bookings). Later ticks compare to that snapshot; if `TEAM` in `booking/team.ts` is non-empty, **new** slots trigger up to `min(newSlots, TEAM.length)` `BookSlot` calls—earliest new times first, one assignee per slot via `pickTeamForSlots` and `bookNewSlotsForTeam`. |
+| `src/core/env.ts` | Resolve project root (walk up to `package.json`) and load `.env` / `.env.local` so compiled output under `dist/` still finds config. |
+| `src/core/types.ts` | `BookingRequestFile`, `SlotRow`, `ParsedSlot`, `slotKey`. |
+| `src/core/functions.ts` | Shared helpers (e.g. `ts()` for log timestamps). |
+| `src/core/config.ts` | Read `BOOKING_*` / `POLL_MS` from the environment and build `AppConfig` (schedule id, list URL, headers, timezone). |
+| `src/core/http.ts` | Browser-like defaults: `buildHeaders`, `buildListSlotsBody`, `parseBody`, `at`, `appointmentBookingRpcUrl`, default Calendar list-slots URL. |
+| `src/polling/poll.ts` | `fetchPollPayload` + `pollOnce`: POST `ListAvailableSlots`, parse to `ParsedSlot[]`, log rows. |
+| `src/polling/slots.ts` | Unwrap nested RPC arrays, `slotsToParsed` / `slotsToRows` for logs. |
+| `src/booking/book.ts` | Booking RPCs: `GetAppointmentServiceDefinition` (context id + title), `buildBookSlotBody`, `bookSlot` (`BookSlot`). |
+| `src/booking/cli.ts` | `npm run book`: one manual `BookSlot` (env or `TEAM` + `BOOKING_AVAILABLE_SLOTS`). |
+| `src/booking/team.ts` | `TEAM`, `pickTeamForSlots`, `pickBooker`, and `bookNewSlotsForTeam` (batch `BookSlot` for `npm start`; same `BOOKING_RECAPTCHA_TOKEN` per burst—refresh if Google rejects later calls). |
+
+**Flows:** `polling` does not import `booking`; `index.ts` imports `booking/team.ts` for auto-book after polls. Shared RPC URL shaping lives in `core/http.ts` (`appointmentBookingRpcUrl`).
 
 # Building and Running
 
